@@ -1,0 +1,15 @@
+{
+  "name": "critcall-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Demo: route critical lab results to the clinician covering the patient right now, with closed-loop acknowledgment and escalation.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,55 @@
+{
+  "demoStart": "2026-11-24T19:40:00Z",
+  "services": {
+    "MED-A": "Medicine A",
+    "MED-B": "Medicine B",
+    "CARD": "Cardiology"
+  },
+  "clinicians": [
+    { "id": "patel", "name": "Dr. Anita Patel", "role": "Day hospitalist", "service": "MED-A", "phone": "555-0101" },
+    { "id": "nguyen", "name": "Dr. Linh Nguyen", "role": "Night cross-cover", "service": "MED-A", "phone": "555-0102" },
+    { "id": "brooks", "name": "Dr. Emma Brooks", "role": "Day hospitalist", "service": "MED-B", "phone": "555-0103" },
+    { "id": "kim", "name": "Dr. Daniel Kim", "role": "Night hospitalist", "service": "MED-B", "phone": "555-0104" },
+    { "id": "hale", "name": "Dr. Marcus Hale", "role": "Day attending (backup)", "service": "MED-A", "phone": "555-0105" },
+    { "id": "okafor", "name": "Dr. Grace Okafor", "role": "Night attending (backup)", "service": "MED-A", "phone": "555-0106" },
+    { "id": "shah", "name": "Dr. Ravi Shah", "role": "Cardiology fellow", "service": "CARD", "phone": "555-0107" },
+    { "id": "lopez", "name": "Maria Lopez, RN", "role": "Charge nurse", "service": "4W", "phone": "555-0201" },
+    { "id": "chen", "name": "Kevin Chen, RN", "role": "Charge nurse", "service": "5E", "phone": "555-0202" }
+  ],
+  "patients": [
+    { "mrn": "100234", "name": "John Doe", "unit": "4W", "bed": "4W-12", "primaryService": "MED-A" },
+    { "mrn": "100587", "name": "Mary Smith", "unit": "5E", "bed": "5E-03", "primaryService": "MED-B" },
+    { "mrn": "100912", "name": "Rosa Garcia", "unit": "5E", "bed": "5E-08 (in Cath Lab 2)", "primaryService": "MED-B" }
+  ],
+  "callSchedule": [
+    { "service": "MED-A", "level": 1, "clinicianId": "patel", "start": "2026-11-24T07:00:00Z", "end": "2026-11-24T19:00:00Z" },
+    { "service": "MED-A", "level": 1, "clinicianId": "nguyen", "start": "2026-11-24T19:00:00Z", "end": "2026-11-25T07:00:00Z" },
+    { "service": "MED-A", "level": 2, "clinicianId": "hale", "start": "2026-11-24T07:00:00Z", "end": "2026-11-24T19:00:00Z" },
+    { "service": "MED-A", "level": 2, "clinicianId": "okafor", "start": "2026-11-24T19:00:00Z", "end": "2026-11-25T07:00:00Z" },
+    { "service": "MED-B", "level": 1, "clinicianId": "brooks", "start": "2026-11-24T07:00:00Z", "end": "2026-11-24T19:00:00Z" },
+    { "service": "MED-B", "level": 1, "clinicianId": "kim", "start": "2026-11-24T19:00:00Z", "end": "2026-11-25T07:00:00Z" },
+    { "service": "MED-B", "level": 2, "clinicianId": "hale", "start": "2026-11-24T07:00:00Z", "end": "2026-11-24T19:00:00Z" },
+    { "service": "MED-B", "level": 2, "clinicianId": "okafor", "start": "2026-11-24T19:00:00Z", "end": "2026-11-25T07:00:00Z" }
+  ],
+  "treatmentTeam": [
+    { "mrn": "100912", "clinicianId": "shah", "role": "procedure", "service": "CARD", "note": "Cardiac catheterization", "start": "2026-11-24T19:00:00Z", "end": "2026-11-24T22:00:00Z" }
+  ],
+  "chargeNurses": {
+    "4W": "lopez",
+    "5E": "chen"
+  },
+  "scenarios": {
+    "A": {
+      "title": "Ordering provider is off shift",
+      "result": { "mrn": "100234", "test": "Potassium (BMP)", "value": "6.8", "units": "mmol/L", "refRange": "3.5–5.1", "flag": "Critical high", "orderedBy": "patel", "orderedAt": "2026-11-24T07:10:00Z" }
+    },
+    "B": {
+      "title": "No answer, escalation runs",
+      "result": { "mrn": "100587", "test": "Troponin I, high-sensitivity", "value": "1250", "units": "ng/L", "refRange": "≤ 34", "flag": "Critical high", "orderedBy": "kim", "orderedAt": "2026-11-24T19:15:00Z" }
+    },
+    "C": {
+      "title": "Procedure team is covering",
+      "result": { "mrn": "100912", "test": "Hemoglobin", "value": "6.1", "units": "g/dL", "refRange": "12.0–15.5", "flag": "Critical low", "orderedBy": "brooks", "orderedAt": "2026-11-24T06:30:00Z" }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CritCall Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar"><span id="nav"></span></header>
+  <main class="landing">
+    <h1>CritCall</h1>
+    <p class="muted">Routes a critical lab result to the clinician covering the patient right now, not just the one who ordered the test. Contact in one click, closed-loop read-back, and escalation before the 30-minute limit.</p>
+    <p class="small muted">Demo only. All patients, clinicians and schedules are fictional.</p>
+
+    <div class="cards">
+      <a href="lab.html"><div class="panel"><h2>Lab tech</h2><p class="small muted">Critical result queue, who is covering, one-click notify, read-back and audit trail.</p></div></a>
+      <a href="clinician.html?id=nguyen"><div class="panel"><h2>Clinician phone</h2><p class="small muted">The alert as the covering clinician sees it. Acknowledge with read-back.</p></div></a>
+      <a href="supervisor.html"><div class="panel"><h2>Supervisor</h2><p class="small muted">Open results by time left, escalations, time-to-ack and breaches.</p></div></a>
+    </div>
+
+    <h3>Demo script</h3>
+    <p class="small">Open <b>Lab tech</b> and <b>Clinician phone</b> side by side. Use <b>Reset demo</b> between runs.</p>
+    <div class="panel">
+      <strong>Scenario A: the ordering provider is off shift</strong>
+      <ol class="script small">
+        <li>Click <b>Post critical result: A</b>. John Doe's potassium is 6.8. Dr. Patel ordered it at 07:10.</li>
+        <li>CritCall shows <b>Covering now: Dr. Linh Nguyen</b> and warns that Dr. Patel has been off shift since 19:00.</li>
+        <li>Click <b>Notify covering clinician</b>. On the phone (Dr. Nguyen), read back "6.8" and tap <b>Acknowledge</b>.</li>
+        <li>Back in the lab view, click <b>Verify read-back and close</b>. The audit timeline shows the full loop.</li>
+      </ol>
+      <strong>Scenario B: no answer, so escalation runs</strong>
+      <ol class="script small">
+        <li>Post <b>B</b> and notify Dr. Kim. Do not acknowledge.</li>
+        <li>Click <b>+10 min</b>. Dr. Okafor (backup) is alerted automatically. Switch the phone to Dr. Okafor and acknowledge.</li>
+        <li>Optional: keep fast-forwarding instead, to show the charge nurse alert at 20 min and the red flag at 25.</li>
+      </ol>
+      <strong>Scenario C: the procedure team is covering</strong>
+      <ol class="script small">
+        <li>Post <b>C</b>. Rosa Garcia is in the cath lab, so CritCall routes to the cardiology fellow, Dr. Shah, instead of her primary team.</li>
+      </ol>
+    </div>
+  </main>
+  <script src="common.js"></script>
+  <script>document.getElementById('nav').outerHTML = CC.nav('');</script>
+</body>
+</html>
