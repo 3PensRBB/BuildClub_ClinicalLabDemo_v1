@@ -9,7 +9,11 @@ const live = CC.live(render, () => me);
 
 select.addEventListener('change', () => {
   me = select.value;
-  history.replaceState(null, '', `?id=${encodeURIComponent(me)}`);
+  try {
+    history.replaceState(null, '', `?id=${encodeURIComponent(me)}`);
+  } catch {
+    // Not allowed in some embedded frames; the selection still works.
+  }
   live.rerender();
 });
 

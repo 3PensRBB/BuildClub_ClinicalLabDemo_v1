@@ -20,6 +20,14 @@ Open http://localhost:3000. Set `PORT` to use another port.
 npm test
 ```
 
+### No Node? Use the single-file version
+
+`dist/critcall-demo.html` is the whole demo in one file. The same code runs inside the page, so there is no server. Download it and double-click it to open it in any browser. Rebuild it after changing code:
+
+```bash
+npm run build
+```
+
 ## The three views
 
 | View | URL | Purpose |
@@ -59,13 +67,16 @@ Closing a result requires the clinician's acknowledgment with a read-back. The a
 ## Project layout
 
 ```
-server.js            HTTP server, JSON API, server-sent events, demo clock
+server.js            HTTP server, server-sent events, static files
+src/api.js           Demo API routes (shared by the server and the single-file build)
 src/resolver.js      Who is covering this patient now
 src/store.js         Results, notifications, acknowledgment, escalation ladder
 src/time.js          Simulated clock and time helpers
 data/seed.json       Fictional patients, clinicians, call schedule, scenarios
 public/              Lab, clinician and supervisor views (plain HTML/JS)
 test/                node:test unit tests
+scripts/             Single-file build
+dist/                Built single-file demo (critcall-demo.html)
 docs/PRD.md          Product requirements summary
 ```
 

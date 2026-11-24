@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>CritCall Demo</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --ink: #1c2330;
+  --muted: #5d6675;
+  --line: #dde1e7;
+  --accent: #1f5fbf;
+  --accent-ink: #ffffff;
+  --crit: #c62828;
+  --crit-bg: #fdecec;
+  --warn: #b26a00;
+  --warn-bg: #fff4e0;
+  --ok: #2e7d32;
+  --ok-bg: #e8f5e9;
+  --soft: #eef1f5;
+  --info-bg: #e7effb;
+  --covering-bg: #f4f8ff;
+  --crit-line: #f0b8b8;
+  --topbar: #14213d;
+  --topbar-btn: #2c3e66;
+  --topbar-line: #3d5287;
+  --topbar-ink: #c9d3e6;
+  --shadow: rgba(0, 0, 0, .08);
+  --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161f; --panel: #1a212d; --ink: #e6eaf1; --muted: #9aa5b6; --line: #2e3746;
+    --accent: #6fa2ff; --accent-ink: #0b1220;
+    --crit: #ff6b6b; --crit-bg: #3a1c1f; --warn: #f0b450; --warn-bg: #3a2c14; --ok: #5fcf73; --ok-bg: #16301c;
+    --soft: #252d3a; --info-bg: #1c2b45; --covering-bg: #17233a; --crit-line: #6b2b2f;
+    --topbar: #0b1020; --topbar-btn: #1f2b47; --topbar-line: #34466f; --topbar-ink: #b4c0d6; --shadow: rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161f; --panel: #1a212d; --ink: #e6eaf1; --muted: #9aa5b6; --line: #2e3746;
+  --accent: #6fa2ff; --accent-ink: #0b1220;
+  --crit: #ff6b6b; --crit-bg: #3a1c1f; --warn: #f0b450; --warn-bg: #3a2c14; --ok: #5fcf73; --ok-bg: #16301c;
+  --soft: #252d3a; --info-bg: #1c2b45; --covering-bg: #17233a; --crit-line: #6b2b2f;
+  --topbar: #0b1020; --topbar-btn: #1f2b47; --topbar-line: #34466f; --topbar-ink: #b4c0d6; --shadow: rgba(0, 0, 0, .4);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+h1, h2, h3 { margin: 0 0 8px; line-height: 1.2; }
+h2 { font-size: 20px; }
+h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 20px; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+/* Top bar */
+.topbar {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 10px 20px; background: var(--topbar); color: #fff;
+}
+.topbar .brand { color: #fff; font-weight: 700; font-size: 18px; text-decoration: none; }
+.topbar nav { display: flex; gap: 4px; }
+.topbar nav a { color: var(--topbar-ink); text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+.topbar nav a.active, .topbar nav a:hover { background: rgba(255,255,255,.12); color: #fff; }
+.demo-bar {
+  margin-left: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  font-size: 13px; color: var(--topbar-ink);
+}
+.demo-bar strong { color: #fff; font-size: 16px; font-variant-numeric: tabular-nums; }
+.demo-bar button { padding: 4px 10px; font-size: 13px; background: var(--topbar-btn); color: #fff; border: 1px solid var(--topbar-line); }
+.demo-bar button.ghost { background: transparent; }
+.demo-group { display: inline-flex; gap: 4px; align-items: center; }
+
+/* Buttons */
+button, .btn {
+  font: inherit; cursor: pointer; border-radius: 8px; padding: 8px 14px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.danger { color: var(--crit); border-color: var(--crit-line); }
+button.success { background: var(--ok); color: var(--panel); border-color: var(--ok); font-weight: 600; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Panels and chips */
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); }
+.chip.open { background: var(--crit-bg); color: var(--crit); }
+.chip.acknowledged { background: var(--warn-bg); color: var(--warn); }
+.chip.closed { background: var(--ok-bg); color: var(--ok); }
+.chip.sent { background: var(--info-bg); color: var(--accent); }
+.chip.rejected, .chip.superseded { background: var(--soft); color: var(--muted); }
+.chip.red { background: var(--crit); color: var(--panel); }
+.timer { white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }
+.t-ok { color: var(--ok); }
+.t-warn { color: var(--warn); }
+.t-crit { color: var(--crit); }
+
+/* Lab layout */
+.lab > * { min-width: 0; }
+.lab { display: grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 16px 20px; align-items: start; }
+.queue { display: flex; flex-direction: column; gap: 8px; }
+.queue-item { text-align: left; display: block; width: 100%; padding: 12px; }
+.queue-item.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(31,95,191,.2); }
+.queue-item .row { display: flex; justify-content: space-between; gap: 8px; }
+.queue-item .val { color: var(--crit); font-weight: 700; }
+.empty { padding: 32px; text-align: center; color: var(--muted); }
+
+.result-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.value { font-size: 26px; font-weight: 700; color: var(--crit); margin: 4px 0; }
+.timer-box { text-align: right; }
+.timer-box .timer { font-size: 28px; display: block; }
+
+.coverage { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-top: 16px; }
+.cov-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; background: var(--panel); }
+.cov-card .label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+.cov-card .name { font-size: 20px; font-weight: 700; margin: 2px 0; }
+.cov-card.covering { border: 2px solid var(--accent); background: var(--covering-bg); }
+.cov-card.warn { border-color: var(--warn); background: var(--warn-bg); }
+.cov-card.match { border-color: var(--ok); background: var(--ok-bg); }
+.cov-card .reason { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.cov-card .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.side-stack { display: flex; flex-direction: column; gap: 12px; }
+.mini { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+.table-wrap { overflow-x: auto; min-width: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+.loop { border-radius: var(--radius); padding: 14px; border: 1px dashed var(--line); }
+.loop.ok { border: 1px solid var(--ok); background: var(--ok-bg); }
+.loop.bad { border: 1px solid var(--crit); background: var(--crit-bg); }
+
+.timeline { list-style: none; padding: 0; margin: 0; }
+.timeline li { display: grid; grid-template-columns: 56px 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.timeline .t { font-variant-numeric: tabular-nums; color: var(--muted); }
+.timeline li.escalation, .timeline li.rerouted { color: var(--warn); }
+.timeline li.red, .timeline li.breach { color: var(--crit); font-weight: 600; }
+.timeline li.ack, .timeline li.closed { color: var(--ok); }
+
+.banner { padding: 10px 14px; border-radius: 8px; margin-top: 12px; font-weight: 600; }
+.banner.red { background: var(--crit); color: var(--panel); }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+
+/* Clinician phone */
+.phone-wrap { display: flex; justify-content: center; padding: 20px; }
+.phone { width: 390px; max-width: 100%; background: #0f1724; border-radius: 36px; padding: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.phone-screen { background: var(--bg); border-radius: 26px; min-height: 680px; overflow: hidden; }
+.phone-head { background: var(--panel); padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.phone-head select { width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); margin-top: 6px; }
+.phone-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.alert-card { background: var(--panel); border-radius: 14px; padding: 14px; border-left: 6px solid var(--crit); box-shadow: 0 1px 3px var(--shadow); }
+.alert-card.done { border-left-color: var(--line); opacity: .8; }
+.alert-card .value { font-size: 22px; }
+.alert-card input { width: 100%; font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var(--line); margin: 8px 0; }
+.alert-card .actions { display: flex; gap: 8px; }
+.alert-card .actions button { flex: 1; justify-content: center; }
+
+/* Supervisor */
+.sup { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.tile .big { font-size: 28px; font-weight: 700; }
+.bar { height: 8px; border-radius: 4px; background: var(--soft); overflow: hidden; min-width: 120px; }
+.bar > span { display: block; height: 100%; }
+tr.red-row { background: var(--crit-bg); }
+
+/* Landing */
+.landing { max-width: 860px; margin: 32px auto; padding: 0 20px; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+.cards a { text-decoration: none; color: inherit; }
+.cards .panel:hover { border-color: var(--accent); }
+ol.script li { margin-bottom: 6px; }
+
+#toasts { position: fixed; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 10; }
+.toast { background: var(--topbar); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.toast.error { background: var(--crit); }
+
+@media (max-width: 900px) {
+  .lab { grid-template-columns: 1fr; }
+  .coverage { grid-template-columns: 1fr; }
+  .tiles, .cards { grid-template-columns: 1fr 1fr; }
+  .demo-bar { margin-left: 0; }
+}
+@media (max-width: 520px) {
+  .tiles, .cards { grid-template-columns: 1fr; }
+  .coverage[style] { grid-template-columns: 1fr !important; }
+  .lab, .sup { padding-left: 16px; padding-right: 16px; }
+}
+
+</style>
+<div id="app"></div>
+<script>
+(function () {
+  const SEED = {"demoStart":"2026-11-24T19:40:00Z","services":{"MED-A":"Medicine A","MED-B":"Medicine B","CARD":"Cardiology"},"clinicians":[{"id":"patel","name":"Dr. Anita Patel","role":"Day hospitalist","service":"MED-A","phone":"555-0101"},{"id":"nguyen","name":"Dr. Linh Nguyen","role":"Night cross-cover","service":"MED-A","phone":"555-0102"},{"id":"brooks","name":"Dr. Emma Brooks","role":"Day hospitalist","service":"MED-B","phone":"555-0103"},{"id":"kim","name":"Dr. Daniel Kim","role":"Night hospitalist","service":"MED-B","phone":"555-0104"},{"id":"hale","name":"Dr. Marcus Hale","role":"Day attending (backup)","service":"MED-A","phone":"555-0105"},{"id":"okafor","name":"Dr. Grace Okafor","role":"Night attending (backup)","service":"MED-A","phone":"555-0106"},{"id":"shah","name":"Dr. Ravi Shah","role":"Cardiology fellow","service":"CARD","phone":"555-0107"},{"id":"lopez","name":"Maria Lopez, RN","role":"Charge nurse","service":"4W","phone":"555-0201"},{"id":"chen","name":"Kevin Chen, RN","role":"Charge nurse","service":"5E","phone":"555-0202"}],"patients":[{"mrn":"100234","name":"John Doe","unit":"4W","bed":"4W-12","primaryService":"MED-A"},{"mrn":"100587","name":"Mary Smith","unit":"5E","bed":"5E-03","primaryService":"MED-B"},{"mrn":"100912","name":"Rosa Garcia","unit":"5E","bed":"5E-08 (in Cath Lab 2)","primaryService":"MED-B"}],"callSchedule":[{"service":"MED-A","level":1,"clinicianId":"patel","start":"2026-11-24T07:00:00Z","end":"2026-11-24T19:00:00Z"},{"service":"MED-A","level":1,"clinicianId":"nguyen","start":"2026-11-24T19:00:00Z","end":"2026-11-25T07:00:00Z"},{"service":"MED-A","level":2,"clinicianId":"hale","start":"2026-11-24T07:00:00Z","end":"2026-11-24T19:00:00Z"},{"service":"MED-A","level":2,"clinicianId":"okafor","start":"2026-11-24T19:00:00Z","end":"2026-11-25T07:00:00Z"},{"service":"MED-B","level":1,"clinicianId":"brooks","start":"2026-11-24T07:00:00Z","end":"2026-11-24T19:00:00Z"},{"service":"MED-B","level":1,"clinicianId":"kim","start":"2026-11-24T19:00:00Z","end":"2026-11-25T07:00:00Z"},{"service":"MED-B","level":2,"clinicianId":"hale","start":"2026-11-24T07:00:00Z","end":"2026-11-24T19:00:00Z"},{"service":"MED-B","level":2,"clinicianId":"okafor","start":"2026-11-24T19:00:00Z","end":"2026-11-25T07:00:00Z"}],"treatmentTeam":[{"mrn":"100912","clinicianId":"shah","role":"procedure","service":"CARD","note":"Cardiac catheterization","start":"2026-11-24T19:00:00Z","end":"2026-11-24T22:00:00Z"}],"chargeNurses":{"4W":"lopez","5E":"chen"},"scenarios":{"A":{"title":"Ordering provider is off shift","result":{"mrn":"100234","test":"Potassium (BMP)","value":"6.8","units":"mmol/L","refRange":"3.5–5.1","flag":"Critical high","orderedBy":"patel","orderedAt":"2026-11-24T07:10:00Z"}},"B":{"title":"No answer, escalation runs","result":{"mrn":"100587","test":"Troponin I, high-sensitivity","value":"1250","units":"ng/L","refRange":"≤ 34","flag":"Critical high","orderedBy":"kim","orderedAt":"2026-11-24T19:15:00Z"}},"C":{"title":"Procedure team is covering","result":{"mrn":"100912","test":"Hemoglobin","value":"6.1","units":"g/dL","refRange":"12.0–15.5","flag":"Critical low","orderedBy":"brooks","orderedAt":"2026-11-24T06:30:00Z"}}}};
+  const defs = {};
+  const cache = {};
+  function define(name, fn) { defs[name] = fn; }
+  function require(name) {
+    if (name.endsWith('.json')) return SEED;
+    if (cache[name]) return cache[name].exports;
+    const module = { exports: {} };
+    cache[name] = module;
+    defs[name](module, module.exports, require);
+    return module.exports;
+  }
+define("./time", function (module, exports, require) {
+'use strict';
+
+// Demo times are stored as UTC ISO strings and shown as hospital-local HH:MM.
+const hhmm = (iso) => new Date(iso).toISOString().slice(11, 16);
+
+const within = (t, start, end) => t >= Date.parse(start) && t < Date.parse(end);
+
+/** Simulated clock: runs at real speed from `startIso`, and can be fast-forwarded. */
+function createClock(startIso) {
+  let base = Date.parse(startIso);
+  let realBase = Date.now();
+  let offset = 0;
+  return {
+    now: () => new Date(base + (Date.now() - realBase) + offset),
+    advance(minutes) {
+      offset += minutes * 60000;
+    },
+    reset() {
+      base = Date.parse(startIso);
+      realBase = Date.now();
+      offset = 0;
+    },
+  };
+}
+
+module.exports = { hhmm, within, createClock };
+
+});
+define("./resolver", function (module, exports, require) {
+'use strict';
+
+const { hhmm, within } = require('./time');
+
+const ROLE_RANK = { procedure: 0, consult: 1 };
+
+/**
+ * Works out who is responsible for a patient at time `now`.
+ *
+ * Order of precedence:
+ *   1. An active procedure or consult coverage window on the treatment team.
+ *   2. The clinician on call (level 1) for the patient's primary service.
+ * Backup = level 2 on call for the primary service (or the primary team's on-call
+ * clinician when a procedure/consult team is covering). Charge nurse = by unit.
+ */
+function resolveCoverage(data, mrn, now, orderedById) {
+  const t = now.getTime();
+  const patient = data.patients.find((p) => p.mrn === mrn);
+  if (!patient) throw new Error(`Unknown patient ${mrn}`);
+
+  const clinician = (id) => data.clinicians.find((c) => c.id === id) || null;
+  const serviceName = (s) => data.services[s] || s;
+  const onCall = (service, level) =>
+    data.callSchedule.find((c) => c.service === service && c.level === level && within(t, c.start, c.end));
+  const contact = (entry, reason) => (entry ? { clinician: clinician(entry.clinicianId), reason } : null);
+
+  const svc = patient.primaryService;
+  const special = data.treatmentTeam
+    .filter((e) => e.mrn === mrn && e.role in ROLE_RANK && within(t, e.start, e.end))
+    .sort((a, b) => ROLE_RANK[a.role] - ROLE_RANK[b.role])[0];
+
+  let primary;
+  let backup;
+  if (special) {
+    const kind = special.role === 'procedure' ? 'Procedure' : 'Consult';
+    primary = contact(
+      special,
+      `${kind} coverage: ${special.note} (${hhmm(special.start)}–${hhmm(special.end)}) overrides the primary team`
+    );
+    const team = onCall(svc, 1);
+    backup = contact(team, `Primary team on call: ${serviceName(svc)} (${team && hhmm(team.start)}–${team && hhmm(team.end)})`);
+  } else {
+    const p = onCall(svc, 1);
+    primary = contact(p, p && `On call for ${serviceName(svc)} (${hhmm(p.start)}–${hhmm(p.end)})`);
+    const b = onCall(svc, 2);
+    backup = contact(b, b && `Backup on call for ${serviceName(svc)} (${hhmm(b.start)}–${hhmm(b.end)})`);
+  }
+
+  const nurseId = data.chargeNurses[patient.unit];
+  const chargeNurse = nurseId ? { clinician: clinician(nurseId), reason: `Charge nurse, unit ${patient.unit}` } : null;
+
+  // How the ordering provider relates to current coverage.
+  let ordering = null;
+  if (orderedById) {
+    const shifts = data.callSchedule.filter((c) => c.clinicianId === orderedById);
+    const onShiftNow = shifts.some((c) => within(t, c.start, c.end));
+    const ended = shifts
+      .filter((c) => Date.parse(c.end) <= t)
+      .sort((a, b) => Date.parse(b.end) - Date.parse(a.end))[0];
+    ordering = {
+      clinician: clinician(orderedById),
+      covering: !!primary && primary.clinician.id === orderedById,
+      onShift: onShiftNow,
+      offShiftSince: !onShiftNow && ended ? ended.end : null,
+    };
+  }
+
+  return {
+    patient: { ...patient, primaryServiceName: serviceName(svc) },
+    primary,
+    backup,
+    chargeNurse,
+    ordering,
+  };
+}
+
+module.exports = { resolveCoverage };
+
+});
+define("./store", function (module, exports, require) {
+'use strict';
+
+const { resolveCoverage } = require('./resolver');
+
+const POLICY_MINUTES = 30;
+const TARGET_LABEL = { primary: 'covering clinician', backup: 'backup', chargeNurse: 'charge nurse' };
+
+// Minutes after the result posts, if nobody has acknowledged it yet.
+const LADDER = [
+  { atMin: 10, step: 1, label: 'Notify backup' },
+  { atMin: 20, step: 2, label: 'Notify charge nurse and lab supervisor' },
+  { atMin: 25, step: 3, label: 'Red flag: call the attending directly' },
+];
+
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** True when a number in the read-back text equals the result value. */
+function readBackMatches(text, value) {
+  const want = Number(String(value).replace(/,/g, ''));
+  const nums = String(text || '').replace(/,/g, '').match(/-?\d+(\.\d+)?/g) || [];
+  return nums.some((n) => Number(n) === want);
+}
+
+function createStore(seed, clock) {
+  let results;
+  let notifications;
+  let seq;
+
+  function reset() {
+    results = [];
+    notifications = [];
+    seq = 0;
+  }
+  reset();
+
+  const nextId = (prefix) => `${prefix}${++seq}`;
+  const nowIso = () => clock.now().toISOString();
+  const minutesBetween = (fromIso, toMs) => (toMs - Date.parse(fromIso)) / 60000;
+  const clinicianName = (id) => (seed.clinicians.find((c) => c.id === id) || { name: id }).name;
+
+  function getResult(id) {
+    const r = results.find((x) => x.id === id);
+    if (!r) throw new HttpError(404, 'Result not found');
+    return r;
+  }
+  function getNotification(id) {
+    const n = notifications.find((x) => x.id === id);
+    if (!n) throw new HttpError(404, 'Notification not found');
+    return n;
+  }
+  const log = (r, type, text) => r.events.push({ at: nowIso(), type, text });
+  const coverage = (r) => resolveCoverage(seed, r.mrn, clock.now(), r.orderedBy);
+
+  function postResult(scenarioKey) {
+    const tpl = seed.scenarios[scenarioKey];
+    if (!tpl) throw new HttpError(404, `Unknown scenario ${scenarioKey}`);
+    const r = {
+      id: nextId('R'),
+      scenario: scenarioKey,
+      ...tpl.result,
+      resultedAt: nowIso(),
+      status: 'open', // open -> acknowledged -> closed
+      escalationStep: 0,
+      supervisorAlerted: false,
+      redFlag: false,
+      breached: false,
+      ack: null,
+      closedAt: null,
+      events: [],
+    };
+    log(r, 'result', `Critical result posted: ${r.test} ${r.value} ${r.units} (${r.flag})`);
+    results.unshift(r);
+    return r;
+  }
+
+  /** Sends to a contact once per result; returns null if they were already contacted. */
+  function send(r, contact, target, { channel = 'message', auto = false } = {}) {
+    if (!contact) return null;
+    const who = contact.clinician.id;
+    if (notifications.some((n) => n.resultId === r.id && n.recipientId === who)) return null;
+    const n = {
+      id: nextId('N'),
+      resultId: r.id,
+      recipientId: who,
+      target,
+      reason: contact.reason,
+      channel,
+      auto,
+      sentAt: nowIso(),
+      status: 'sent', // sent -> acknowledged | superseded | rejected
+      ackAt: null,
+    };
+    notifications.push(n);
+    const verb = channel === 'call' ? 'Called' : 'Secure message sent to';
+    log(r, auto ? 'escalation' : 'notify', `${auto ? 'Auto-escalation: ' : ''}${verb} ${contact.clinician.name} (${TARGET_LABEL[target]})`);
+    return n;
+  }
+
+  function notify(resultId, { target = 'primary', channel = 'message' } = {}) {
+    const r = getResult(resultId);
+    if (r.status !== 'open') throw new HttpError(409, 'Result is already acknowledged');
+    if (!['primary', 'backup', 'chargeNurse'].includes(target)) throw new HttpError(400, 'Unknown target');
+    if (!['message', 'call'].includes(channel)) throw new HttpError(400, 'Unknown channel');
+    const contact = coverage(r)[target];
+    if (!contact) throw new HttpError(409, `No ${target} found for this patient right now`);
+    const n = send(r, contact, target, { channel });
+    if (!n) throw new HttpError(409, `${contact.clinician.name} was already contacted for this result`);
+    return n;
+  }
+
+  function acknowledge(notificationId, { readBack = '' } = {}) {
+    const n = getNotification(notificationId);
+    const r = getResult(n.resultId);
+    if (n.status !== 'sent' || r.status !== 'open') throw new HttpError(409, 'This alert is no longer open');
+    if (!String(readBack).trim()) throw new HttpError(400, 'Read back the value to acknowledge');
+    const now = clock.now();
+    n.status = 'acknowledged';
+    n.ackAt = now.toISOString();
+    for (const other of notifications) {
+      if (other.resultId === r.id && other.status === 'sent') other.status = 'superseded';
+    }
+    r.status = 'acknowledged';
+    r.ack = {
+      by: n.recipientId,
+      at: n.ackAt,
+      readBack: String(readBack).slice(0, 200),
+      matches: readBackMatches(readBack, r.value),
+      minutesToAck: minutesBetween(r.resultedAt, now.getTime()),
+    };
+    log(r, 'ack', `${clinicianName(n.recipientId)} acknowledged. Read-back: "${r.ack.readBack}"${r.ack.matches ? '' : ' (does not match value)'}`);
+    return n;
+  }
+
+  function close(resultId) {
+    const r = getResult(resultId);
+    if (r.status !== 'acknowledged') throw new HttpError(409, 'A clinician must acknowledge before closing');
+    r.status = 'closed';
+    r.closedAt = nowIso();
+    log(r, 'closed', 'Lab tech verified the read-back. Result closed.');
+    return r;
+  }
+
+  function wrongPerson(notificationId, { reason = '' } = {}) {
+    const n = getNotification(notificationId);
+    const r = getResult(n.resultId);
+    if (n.status !== 'sent' || r.status !== 'open') throw new HttpError(409, 'This alert is no longer open');
+    n.status = 'rejected';
+    n.rejectReason = String(reason || 'Not covering this patient').slice(0, 200);
+    log(r, 'rerouted', `${clinicianName(n.recipientId)} marked "wrong person": ${n.rejectReason}`);
+    const cov = coverage(r);
+    for (const target of ['primary', 'backup', 'chargeNurse']) {
+      if (send(r, cov[target], target, { auto: true })) return n;
+    }
+    r.redFlag = true;
+    log(r, 'red', 'No remaining contacts. Call the attending directly.');
+    return n;
+  }
+
+  /** Runs the escalation ladder. Returns true if anything changed. */
+  function tick() {
+    const t = clock.now().getTime();
+    let changed = false;
+    for (const r of results) {
+      if (r.status !== 'open') continue;
+      const m = minutesBetween(r.resultedAt, t);
+      for (const rung of LADDER) {
+        if (r.escalationStep >= rung.step || m < rung.atMin) continue;
+        r.escalationStep = rung.step;
+        changed = true;
+        const cov = coverage(r);
+        if (rung.step === 1) {
+          send(r, cov.primary, 'primary', { auto: true });
+          send(r, cov.backup, 'backup', { auto: true });
+        } else if (rung.step === 2) {
+          send(r, cov.chargeNurse, 'chargeNurse', { auto: true });
+          r.supervisorAlerted = true;
+          log(r, 'escalation', 'Lab supervisor alerted: 20 minutes without acknowledgment');
+        } else {
+          r.redFlag = true;
+          log(r, 'red', 'RED FLAG: 25 minutes without acknowledgment. Call the attending directly.');
+        }
+      }
+      if (!r.breached && m >= POLICY_MINUTES) {
+        r.breached = true;
+        changed = true;
+        log(r, 'breach', `Policy breach: no acknowledgment within ${POLICY_MINUTES} minutes`);
+      }
+    }
+    return changed;
+  }
+
+  function snapshot() {
+    const now = clock.now();
+    return {
+      now: now.toISOString(),
+      policyMinutes: POLICY_MINUTES,
+      ladder: LADDER,
+      scenarios: Object.fromEntries(Object.entries(seed.scenarios).map(([k, v]) => [k, v.title])),
+      clinicians: seed.clinicians,
+      results: results.map((r) => ({
+        ...r,
+        coverage: coverage(r),
+        notifications: notifications.filter((n) => n.resultId === r.id),
+        deadline: new Date(Date.parse(r.resultedAt) + POLICY_MINUTES * 60000).toISOString(),
+      })),
+    };
+  }
+
+  return { reset, postResult, notify, acknowledge, close, wrongPerson, tick, snapshot };
+}
+
+module.exports = { createStore, HttpError, readBackMatches, POLICY_MINUTES, LADDER };
+
+});
+define("./api", function (module, exports, require) {
+'use strict';
+
+const { HttpError } = require('./store');
+
+/**
+ * The demo's POST API, independent of transport. Used by the Node server and by the
+ * standalone single-file build, where it runs in the browser.
+ * Returns post(pathname, body) -> result, throwing HttpError on bad requests.
+ */
+function createApi(store, clock) {
+  const routes = [
+    [/^\/api\/results$/, (_, b) => store.postResult(b.scenario)],
+    [/^\/api\/results\/(\w+)\/notify$/, ([id], b) => store.notify(id, b)],
+    [/^\/api\/results\/(\w+)\/close$/, ([id]) => store.close(id)],
+    [/^\/api\/notifications\/(\w+)\/ack$/, ([id], b) => store.acknowledge(id, b)],
+    [/^\/api\/notifications\/(\w+)\/wrong-person$/, ([id], b) => store.wrongPerson(id, b)],
+    [/^\/api\/clock\/advance$/, (_, b) => {
+      const minutes = Number(b.minutes);
+      if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 120) throw new HttpError(400, 'minutes must be 1–120');
+      clock.advance(minutes);
+      return { ok: true };
+    }],
+    [/^\/api\/reset$/, () => {
+      clock.reset();
+      store.reset();
+      return { ok: true };
+    }],
+  ];
+
+  return function post(pathname, body = {}) {
+    for (const [pattern, handler] of routes) {
+      const m = pathname.match(pattern);
+      if (!m) continue;
+      const result = handler(m.slice(1), body || {});
+      store.tick();
+      return result;
+    }
+    throw new HttpError(404, 'Not found');
+  };
+}
+
+module.exports = { createApi };
+
+});
+
+  const { createClock } = require('./time');
+  const { createStore } = require('./store');
+  const { createApi } = require('./api');
+  const clock = createClock(SEED.demoStart);
+  const store = createStore(SEED, clock);
+  const post = createApi(store, clock);
+
+  let subscribers = [];
+  const push = () => {
+    const state = store.snapshot();
+    subscribers.slice().forEach((cb) => cb(state));
+  };
+  setInterval(() => { store.tick(); push(); }, 1000);
+
+  // Stands in for HTTP + server-sent events (see public/common.js).
+  window.CC_TRANSPORT = {
+    async post(pathname, body) {
+      try {
+        const data = post(pathname, JSON.parse(JSON.stringify(body || {})));
+        setTimeout(push);
+        return { ok: true, data };
+      } catch (err) {
+        if (!err.status) console.error(err);
+        return { ok: false, data: { error: err.status ? err.message : 'Something went wrong' }, statusText: 'Error' };
+      }
+    },
+    subscribe(cb) {
+      subscribers.push(cb);
+      setTimeout(() => cb(store.snapshot()));
+      return () => { subscribers = subscribers.filter((x) => x !== cb); };
+    },
+  };
+  window.CC_RESET_SUBSCRIBERS = () => { subscribers = []; };
+})();</script>
+<script>/* Shared helpers for all CritCall views. */
+const CC = (() => {
+  const esc = (s) =>
+    String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+  const hhmm = (iso) => (iso ? new Date(iso).toISOString().slice(11, 16) : '');
+
+  const mmss = (minutes) => {
+    const neg = minutes < 0;
+    const s = Math.abs(Math.round(minutes * 60));
+    return `${neg ? '-' : ''}${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  };
+
+  const TARGET_LABEL = { primary: 'Covering', backup: 'Backup', chargeNurse: 'Charge nurse' };
+
+  function toast(message, kind = 'info') {
+    let host = document.getElementById('toasts');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'toasts';
+      document.body.appendChild(host);
+    }
+    const el = document.createElement('div');
+    el.className = `toast ${kind}`;
+    el.textContent = message;
+    host.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  // How the views talk to the demo backend. The standalone build sets window.CC_TRANSPORT
+  // to run the same backend code inside the page instead of over HTTP.
+  const transport = window.CC_TRANSPORT || {
+    async post(path, body) {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+      });
+      return { ok: res.ok, data: await res.json().catch(() => ({})), statusText: res.statusText };
+    },
+    subscribe(onState) {
+      const es = new EventSource('/api/events');
+      es.onmessage = (e) => onState(JSON.parse(e.data));
+      return () => es.close();
+    },
+  };
+
+  async function api(path, body) {
+    const { ok, data, statusText } = await transport.post(path, body);
+    if (!ok) {
+      toast(data.error || statusText, 'error');
+      throw new Error(data.error || statusText);
+    }
+    return data;
+  }
+
+  /**
+   * Subscribes to live state. `render(state)` runs when something structural changes;
+   * timers ([data-deadline], [data-since]) are refreshed every second without re-rendering,
+   * so inputs keep their contents.
+   */
+  function live(render, signatureExtra = () => '') {
+    let lastSig = null;
+    let lastState = null;
+    const sig = (s) =>
+      JSON.stringify(
+        s.results.map((r) => [r.id, r.status, r.events.length, r.coverage.primary?.clinician.id, r.notifications.map((n) => n.status)])
+      ) + signatureExtra();
+
+    function update(state, force) {
+      lastState = state;
+      const s = sig(state);
+      if (force || s !== lastSig) {
+        lastSig = s;
+        render(state);
+      }
+      tickTimers(state);
+      const clock = document.getElementById('clock');
+      if (clock) clock.textContent = hhmm(state.now);
+    }
+
+    transport.subscribe((state) => update(state));
+    return { rerender: () => lastState && update(lastState, true), state: () => lastState };
+  }
+
+  function tickTimers(state) {
+    const now = Date.parse(state.now);
+    document.querySelectorAll('[data-deadline]').forEach((el) => {
+      const left = (Date.parse(el.dataset.deadline) - now) / 60000;
+      el.textContent = left >= 0 ? `${mmss(left)} left` : `${mmss(-left)} over`;
+      el.classList.toggle('t-ok', left > 15);
+      el.classList.toggle('t-warn', left <= 15 && left > 5);
+      el.classList.toggle('t-crit', left <= 5);
+    });
+    document.querySelectorAll('[data-since]').forEach((el) => {
+      el.textContent = mmss((now - Date.parse(el.dataset.since)) / 60000);
+    });
+  }
+
+  /** Demo controls: post scenario results, fast-forward the clock, reset. */
+  function demoBar(el) {
+    el.innerHTML = `
+      <span class="clock-wrap">Demo clock <strong id="clock">--:--</strong></span>
+      <span class="demo-group">Post critical result:
+        <button data-scn="A" title="Ordering provider is off shift">A</button>
+        <button data-scn="B" title="No answer, escalation runs">B</button>
+        <button data-scn="C" title="Procedure team is covering">C</button>
+      </span>
+      <span class="demo-group">Fast-forward:
+        <button data-adv="5">+5 min</button>
+        <button data-adv="10">+10 min</button>
+      </span>
+      <button data-reset class="ghost">Reset demo</button>`;
+    el.addEventListener('click', async (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.scn) {
+        await api('/api/results', { scenario: b.dataset.scn });
+        toast(`Scenario ${b.dataset.scn}: critical result posted`);
+      } else if (b.dataset.adv) {
+        await api('/api/clock/advance', { minutes: Number(b.dataset.adv) });
+      } else if (b.hasAttribute('data-reset')) {
+        await api('/api/reset');
+        toast('Demo reset');
+      }
+    });
+  }
+
+  function nav(active) {
+    const links = [
+      ['lab.html', 'Lab tech'],
+      ['clinician.html', 'Clinician phone'],
+      ['supervisor.html', 'Supervisor'],
+    ];
+    return `<a class="brand" href="/">CritCall</a><nav>${links
+      .map(([href, label]) => `<a href="${href}" class="${href === active ? 'active' : ''}">${label}</a>`)
+      .join('')}</nav>`;
+  }
+
+  return { esc, hhmm, mmss, toast, api, live, demoBar, nav, TARGET_LABEL };
+})();
+</script>
+<script>
+const VIEWS = {
+  home: {
+    html: "<header class=\"topbar\"><span id=\"nav\"></span></header>\n  <main class=\"landing\">\n    <h1>CritCall</h1>\n    <p class=\"muted\">Routes a critical lab result to the clinician covering the patient right now, not just the one who ordered the test. Contact in one click, closed-loop read-back, and escalation before the 30-minute limit.</p>\n    <p class=\"small muted\">Demo only. All patients, clinicians and schedules are fictional.</p>\n\n    <div class=\"cards\">\n      <a href=\"lab.html\"><div class=\"panel\"><h2>Lab tech</h2><p class=\"small muted\">Critical result queue, who is covering, one-click notify, read-back and audit trail.</p></div></a>\n      <a href=\"clinician.html?id=nguyen\"><div class=\"panel\"><h2>Clinician phone</h2><p class=\"small muted\">The alert as the covering clinician sees it. Acknowledge with read-back.</p></div></a>\n      <a href=\"supervisor.html\"><div class=\"panel\"><h2>Supervisor</h2><p class=\"small muted\">Open results by time left, escalations, time-to-ack and breaches.</p></div></a>\n    </div>\n\n    <h3>Demo script</h3>\n    <p class=\"small\">Open <b>Lab tech</b> and <b>Clinician phone</b> side by side. Use <b>Reset demo</b> between runs.</p>\n    <div class=\"panel\">\n      <strong>Scenario A: the ordering provider is off shift</strong>\n      <ol class=\"script small\">\n        <li>Click <b>Post critical result: A</b>. John Doe's potassium is 6.8. Dr. Patel ordered it at 07:10.</li>\n        <li>CritCall shows <b>Covering now: Dr. Linh Nguyen</b> and warns that Dr. Patel has been off shift since 19:00.</li>\n        <li>Click <b>Notify covering clinician</b>. On the phone (Dr. Nguyen), read back \"6.8\" and tap <b>Acknowledge</b>.</li>\n        <li>Back in the lab view, click <b>Verify read-back and close</b>. The audit timeline shows the full loop.</li>\n      </ol>\n      <strong>Scenario B: no answer, so escalation runs</strong>\n      <ol class=\"script small\">\n        <li>Post <b>B</b> and notify Dr. Kim. Do not acknowledge.</li>\n        <li>Click <b>+10 min</b>. Dr. Okafor (backup) is alerted automatically. Switch the phone to Dr. Okafor and acknowledge.</li>\n        <li>Optional: keep fast-forwarding instead, to show the charge nurse alert at 20 min and the red flag at 25.</li>\n      </ol>\n      <strong>Scenario C: the procedure team is covering</strong>\n      <ol class=\"script small\">\n        <li>Post <b>C</b>. Rosa Garcia is in the cath lab, so CritCall routes to the cardiology fellow, Dr. Shah, instead of her primary team.</li>\n      </ol>\n    </div>\n  </main>",
+    run() {
+document.getElementById('nav').outerHTML = CC.nav('');
+    },
+  },
+  lab: {
+    html: "<header class=\"topbar\"><span id=\"nav\"></span><div class=\"demo-bar\" id=\"demo\"></div></header>\n  <main class=\"lab\">\n    <section>\n      <h3 style=\"margin-top:0\">Critical result queue</h3>\n      <div class=\"queue\" id=\"queue\"></div>\n    </section>\n    <section class=\"panel\" id=\"detail\"></section>\n  </main>",
+    run() {
+const { esc, hhmm, api, toast, TARGET_LABEL } = CC;
+
+document.getElementById('nav').outerHTML = CC.nav('lab.html');
+CC.demoBar(document.getElementById('demo'));
+
+let selectedId = null;
+let known = null; // result ids seen so far, to auto-select newly posted results
+const name = (state, id) => (state.clinicians.find((c) => c.id === id) || { name: id }).name;
+
+const live = CC.live(render, () => selectedId || '');
+
+function render(state) {
+  const { results } = state;
+  const fresh = known ? results.find((r) => !known.has(r.id)) : null;
+  known = new Set(results.map((r) => r.id));
+  if (fresh) selectedId = fresh.id;
+  if (!results.some((r) => r.id === selectedId)) {
+    selectedId = (results.find((r) => r.status === 'open') || results[0] || {}).id || null;
+  }
+  renderQueue(state);
+  renderDetail(state, results.find((r) => r.id === selectedId));
+}
+
+function renderQueue(state) {
+  const q = document.getElementById('queue');
+  if (!state.results.length) {
+    q.innerHTML = `<div class="panel empty">No critical results.<br><span class="small">Use <b>Post critical result</b> above to start a scenario.</span></div>`;
+    return;
+  }
+  q.innerHTML = state.results
+    .map((r) => {
+      const p = r.coverage.patient;
+      const timer = r.status === 'open' ? `<span class="timer" data-deadline="${r.deadline}"></span>` : '';
+      return `<button class="queue-item ${r.id === selectedId ? 'selected' : ''}" data-id="${r.id}">
+        <div class="row"><strong>${esc(p.name)}</strong>${statusChip(r)}</div>
+        <div class="small muted">${esc(p.bed)} · MRN ${esc(p.mrn)}</div>
+        <div class="row"><span class="val">${esc(r.test)} ${esc(r.value)}</span>${timer}</div>
+      </button>`;
+    })
+    .join('');
+}
+
+document.getElementById('queue').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-id]');
+  if (!b) return;
+  selectedId = b.dataset.id;
+  live.rerender();
+});
+
+function statusChip(r) {
+  if (r.redFlag && r.status === 'open') return `<span class="chip red">RED FLAG</span>`;
+  const label = { open: r.notifications.length ? 'Awaiting ack' : 'Not notified', acknowledged: 'Read-back pending', closed: 'Closed' }[r.status];
+  return `<span class="chip ${r.status}">${label}</span>`;
+}
+
+function renderDetail(state, r) {
+  const el = document.getElementById('detail');
+  if (!r) {
+    el.innerHTML = `<div class="empty"><h2>Ready for the demo</h2>
+      <p>Post scenario <b>A</b> to show a result whose ordering provider has gone off shift.</p></div>`;
+    return;
+  }
+  const c = r.coverage;
+  const p = c.patient;
+  const open = r.status === 'open';
+  const contacted = (id) => r.notifications.some((n) => n.recipientId === id);
+
+  const timerBox = open
+    ? `<div class="timer-box"><span class="small muted">30-min policy timer</span><span class="timer" data-deadline="${r.deadline}"></span></div>`
+    : r.ack
+      ? `<div class="timer-box"><span class="small muted">Time to acknowledgment</span><span class="timer t-ok">${CC.mmss(r.ack.minutesToAck)}</span></div>`
+      : '';
+
+  const covering = c.primary
+    ? `<div class="cov-card covering">
+        <div class="label">Covering now</div>
+        <div class="name">${esc(c.primary.clinician.name)}</div>
+        <div>${esc(c.primary.clinician.role)}</div>
+        <div class="reason">${esc(c.primary.reason)}</div>
+        <div class="actions">
+          <button class="primary" data-notify="primary" ${!open || contacted(c.primary.clinician.id) ? 'disabled' : ''}>
+            ${contacted(c.primary.clinician.id) ? 'Notified' : 'Notify covering clinician'}</button>
+          <button data-call="primary" ${!open || contacted(c.primary.clinician.id) ? 'disabled' : ''}>Call ${esc(c.primary.clinician.phone)}</button>
+        </div>
+      </div>`
+    : `<div class="cov-card warn"><div class="label">Covering now</div><div class="name">No one found</div>
+        <div class="reason">No on-call entry for this service. Call the attending directly.</div></div>`;
+
+  const o = c.ordering;
+  const orderingCard = o
+    ? `<div class="cov-card ${o.covering ? 'match' : 'warn'}">
+        <div class="label">Ordered by</div>
+        <div class="mini"><strong>${esc(o.clinician.name)}</strong></div>
+        <div class="small">${esc(o.clinician.role)} · ordered ${hhmm(r.orderedAt)}</div>
+        <div class="small" style="margin-top:6px;font-weight:600">${
+          o.covering
+            ? 'Also the covering clinician'
+            : `Not covering this patient now${o.offShiftSince ? `. Off shift since ${hhmm(o.offShiftSince)}` : ''}. Do not call.`
+        }</div>
+      </div>`
+    : '';
+
+  const otherCard = (target) => {
+    const x = c[target];
+    if (!x) return '';
+    return `<div class="cov-card">
+      <div class="mini"><span class="label">${TARGET_LABEL[target]}</span>
+        <button class="small" data-notify="${target}" ${!open || contacted(x.clinician.id) ? 'disabled' : ''}>${contacted(x.clinician.id) ? 'Notified' : 'Notify'}</button></div>
+      <strong>${esc(x.clinician.name)}</strong> <span class="small muted">${esc(x.clinician.phone)}</span>
+      <div class="reason">${esc(x.reason)}</div>
+    </div>`;
+  };
+
+  const banners = [
+    r.redFlag && open ? `<div class="banner red">25 minutes without acknowledgment. Call the attending directly.</div>` : '',
+    r.supervisorAlerted && open && !r.redFlag ? `<div class="banner warn">Escalated: charge nurse and lab supervisor alerted.</div>` : '',
+    r.breached ? `<div class="banner red">Policy breach: not acknowledged within 30 minutes.</div>` : '',
+  ].join('');
+
+  const notifRows = r.notifications.length
+    ? `<table><thead><tr><th>Sent</th><th>To</th><th>Role</th><th>Via</th><th>Status</th><th></th></tr></thead><tbody>${r.notifications
+        .map(
+          (n) => `<tr>
+            <td>${hhmm(n.sentAt)}</td>
+            <td>${esc(name(state, n.recipientId))}</td>
+            <td>${TARGET_LABEL[n.target]}${n.auto ? ' <span class="chip">auto</span>' : ''}</td>
+            <td>${n.channel === 'call' ? 'Call' : 'Secure msg'}</td>
+            <td><span class="chip ${n.status}">${n.status}${n.ackAt ? ` ${hhmm(n.ackAt)}` : ''}</span>${n.rejectReason ? `<div class="small muted">${esc(n.rejectReason)}</div>` : ''}</td>
+            <td>${n.status === 'sent' ? `<button class="small danger" data-wrong="${n.id}">Wrong person</button>` : ''}</td>
+          </tr>`
+        )
+        .join('')}</tbody></table>`
+    : `<p class="muted small">No one contacted yet.</p>`;
+
+  let loop;
+  if (r.status === 'open') {
+    loop = `<div class="loop"><span class="muted">Waiting for the clinician to acknowledge and read back the value.</span></div>`;
+  } else {
+    const a = r.ack;
+    loop = `<div class="loop ${a.matches ? 'ok' : 'bad'}">
+      <div><strong>${esc(name(state, a.by))}</strong> acknowledged at ${hhmm(a.at)}.</div>
+      <div>Read-back: <strong>"${esc(a.readBack)}"</strong>. ${a.matches ? 'Matches the value.' : `Does not match ${esc(r.value)}. Call to confirm.`}</div>
+      ${
+        r.status === 'acknowledged'
+          ? `<div style="margin-top:10px"><button class="success" data-close="${r.id}">Verify read-back and close</button></div>`
+          : `<div style="margin-top:6px" class="small">Closed at ${hhmm(r.closedAt)}.</div>`
+      }
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="result-head">
+      <div>
+        <h2>${esc(p.name)} <span class="muted small">MRN ${esc(p.mrn)} · ${esc(p.bed)} · ${esc(p.primaryServiceName)}</span></h2>
+        <div class="value">${esc(r.test)}: ${esc(r.value)} ${esc(r.units)} <span class="chip open">${esc(r.flag)}</span></div>
+        <div class="muted small">Reference ${esc(r.refRange)} · Resulted ${hhmm(r.resultedAt)}</div>
+      </div>
+      ${timerBox}
+    </div>
+    ${banners}
+    <div class="coverage">
+      ${covering}
+      <div class="side-stack">${orderingCard}</div>
+    </div>
+    <div class="coverage" style="grid-template-columns:1fr 1fr">${otherCard('backup')}${otherCard('chargeNurse')}</div>
+    <h3>Notifications</h3><div class="table-wrap">${notifRows}</div>
+    <h3>Closed loop</h3>${loop}
+    <h3>Audit timeline</h3>
+    <ul class="timeline">${r.events.map((e) => `<li class="${e.type}"><span class="t">${hhmm(e.at)}</span><span>${esc(e.text)}</span></li>`).join('')}</ul>`;
+}
+
+document.getElementById('detail').addEventListener('click', async (e) => {
+  const b = e.target.closest('button');
+  if (!b || !selectedId) return;
+  if (b.dataset.notify) {
+    await api(`/api/results/${selectedId}/notify`, { target: b.dataset.notify, channel: 'message' });
+    toast('Secure message sent');
+  } else if (b.dataset.call) {
+    await api(`/api/results/${selectedId}/notify`, { target: b.dataset.call, channel: 'call' });
+    toast('Call placed and logged');
+  } else if (b.dataset.wrong) {
+    await api(`/api/notifications/${b.dataset.wrong}/wrong-person`, { reason: 'Lab: not covering this patient' });
+    toast('Re-routed to the next contact');
+  } else if (b.dataset.close) {
+    await api(`/api/results/${b.dataset.close}/close`);
+    toast('Result closed');
+  }
+});
+
+    },
+  },
+  clinician: {
+    html: "<header class=\"topbar\"><span id=\"nav\"></span><div class=\"demo-bar\"><span>Demo clock <strong id=\"clock\">--:--</strong></span></div></header>\n  <div class=\"phone-wrap\">\n    <div class=\"phone\">\n      <div class=\"phone-screen\">\n        <div class=\"phone-head\">\n          <div class=\"small muted\">Signed in as</div>\n          <select id=\"who\"></select>\n        </div>\n        <div class=\"phone-body\" id=\"alerts\"></div>\n      </div>\n    </div>\n  </div>",
+    run() {
+const { esc, hhmm, api, toast, TARGET_LABEL } = CC;
+
+document.getElementById('nav').outerHTML = CC.nav('clinician.html');
+
+const select = document.getElementById('who');
+let me = new URLSearchParams(location.search).get('id') || 'nguyen';
+
+const live = CC.live(render, () => me);
+
+select.addEventListener('change', () => {
+  me = select.value;
+  try {
+    history.replaceState(null, '', `?id=${encodeURIComponent(me)}`);
+  } catch {
+    // Not allowed in some embedded frames; the selection still works.
+  }
+  live.rerender();
+});
+
+function render(state) {
+  if (!select.options.length) {
+    select.innerHTML = state.clinicians
+      .map((c) => `<option value="${esc(c.id)}">${esc(c.name)}, ${esc(c.role)}</option>`)
+      .join('');
+  }
+  select.value = me;
+
+  const mine = [];
+  for (const r of state.results) {
+    for (const n of r.notifications) if (n.recipientId === me) mine.push({ r, n });
+  }
+  mine.sort((a, b) => (a.n.status === 'sent' ? 0 : 1) - (b.n.status === 'sent' ? 0 : 1) || b.n.sentAt.localeCompare(a.n.sentAt));
+
+  const host = document.getElementById('alerts');
+  if (!mine.length) {
+    host.innerHTML = `<div class="empty">No critical result alerts.</div>`;
+    return;
+  }
+  host.innerHTML = mine.map(({ r, n }) => card(r, n)).join('');
+}
+
+function card(r, n) {
+  const p = r.coverage.patient;
+  const pending = n.status === 'sent';
+  const statusText = {
+    acknowledged: `You acknowledged at ${hhmm(n.ackAt)}`,
+    superseded: 'Acknowledged by another clinician',
+    rejected: 'You marked this as wrong person',
+  }[n.status];
+  return `<div class="alert-card ${pending ? '' : 'done'}">
+    <div class="mini"><span class="chip open">CRITICAL RESULT</span><span class="small muted">${hhmm(n.sentAt)}</span></div>
+    <div style="margin-top:8px"><strong>${esc(p.name)}</strong> <span class="small muted">${esc(p.bed)} · MRN ${esc(p.mrn)}</span></div>
+    <div class="value">${esc(r.test)}: ${esc(r.value)} ${esc(r.units)}</div>
+    <div class="small muted">Ref ${esc(r.refRange)} · resulted ${hhmm(r.resultedAt)}</div>
+    <div class="small" style="margin-top:6px">Sent to you as <strong>${TARGET_LABEL[n.target]}</strong>: ${esc(n.reason)}</div>
+    ${
+      pending
+        ? `<div class="small" style="margin-top:8px">Policy timer: <span class="timer" data-deadline="${r.deadline}"></span></div>
+           <input data-rb="${n.id}" placeholder="Read back the value, e.g. ${esc(r.value)} ${esc(r.units)}" autocomplete="off">
+           <div class="actions">
+             <button class="success" data-ack="${n.id}">Acknowledge</button>
+             <button class="danger" data-wrong="${n.id}">Not my patient</button>
+           </div>`
+        : `<div class="small muted" style="margin-top:8px">${statusText}</div>`
+    }
+  </div>`;
+}
+
+document.getElementById('alerts').addEventListener('click', async (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.ack) {
+    const input = document.querySelector(`[data-rb="${b.dataset.ack}"]`);
+    if (!input.value.trim()) {
+      toast('Read back the value to acknowledge', 'error');
+      input.focus();
+      return;
+    }
+    await api(`/api/notifications/${b.dataset.ack}/ack`, { readBack: input.value });
+    toast('Acknowledged. The lab can see your read-back.');
+  } else if (b.dataset.wrong) {
+    await api(`/api/notifications/${b.dataset.wrong}/wrong-person`, { reason: 'Clinician: not my patient' });
+    toast('Sent back to the lab and re-routed');
+  }
+});
+
+    },
+  },
+  supervisor: {
+    html: "<header class=\"topbar\"><span id=\"nav\"></span><div class=\"demo-bar\" id=\"demo\"></div></header>\n  <main class=\"sup\">\n    <div class=\"tiles\" id=\"tiles\"></div>\n    <section class=\"panel\">\n      <h3 style=\"margin-top:0\">Open critical results</h3>\n      <div id=\"open\"></div>\n    </section>\n    <section class=\"panel\">\n      <h3 style=\"margin-top:0\">Acknowledged and closed</h3>\n      <div id=\"done\"></div>\n    </section>\n  </main>",
+    run() {
+const { esc, hhmm, mmss } = CC;
+
+document.getElementById('nav').outerHTML = CC.nav('supervisor.html');
+CC.demoBar(document.getElementById('demo'));
+
+const STEP_LABEL = ['Covering clinician', 'Backup notified', 'Charge nurse + supervisor', 'RED FLAG'];
+const name = (state, id) => (state.clinicians.find((c) => c.id === id) || { name: id }).name;
+
+// Re-render every second here: the time bars are the point of this view and it has no inputs.
+CC.live(render, () => String(Date.now() / 1000 | 0));
+
+function render(state) {
+  const now = Date.parse(state.now);
+  const open = state.results.filter((r) => r.status === 'open');
+  const done = state.results.filter((r) => r.status !== 'open');
+  const acks = done.map((r) => r.ack.minutesToAck);
+  const avg = acks.length ? acks.reduce((a, b) => a + b, 0) / acks.length : null;
+  const misroutes = state.results.reduce((n, r) => n + r.notifications.filter((x) => x.status === 'rejected').length, 0);
+  const breaches = state.results.filter((r) => r.breached).length;
+
+  document.getElementById('tiles').innerHTML = [
+    ['Open critical results', open.length],
+    ['Avg time to acknowledge', avg === null ? '–' : mmss(avg)],
+    ['Wrong-person re-routes', misroutes],
+    ['30-min policy breaches', breaches],
+  ]
+    .map(([label, v]) => `<div class="panel tile"><div class="small muted">${label}</div><div class="big">${v}</div></div>`)
+    .join('');
+
+  document.getElementById('open').innerHTML = open.length
+    ? `<div class="table-wrap"><table><thead><tr><th>Patient</th><th>Result</th><th>Covering now</th><th>Contacted</th><th>Stage</th><th>Time left</th></tr></thead><tbody>${open
+        .map((r) => {
+          const left = (Date.parse(r.deadline) - now) / 60000;
+          const pct = Math.max(0, Math.min(100, (left / state.policyMinutes) * 100));
+          const color = left > 15 ? 'var(--ok)' : left > 5 ? 'var(--warn)' : 'var(--crit)';
+          return `<tr class="${r.redFlag ? 'red-row' : ''}">
+            <td><strong>${esc(r.coverage.patient.name)}</strong><div class="small muted">${esc(r.coverage.patient.bed)}</div></td>
+            <td>${esc(r.test)} <strong>${esc(r.value)}</strong> ${esc(r.units)}</td>
+            <td>${esc(r.coverage.primary ? r.coverage.primary.clinician.name : 'None found')}</td>
+            <td>${r.notifications.length ? r.notifications.map((n) => esc(name(state, n.recipientId))).join(', ') : '<span class="chip open">Nobody yet</span>'}</td>
+            <td>${r.redFlag ? '<span class="chip red">RED FLAG</span>' : esc(STEP_LABEL[r.escalationStep])}</td>
+            <td><span class="timer" data-deadline="${r.deadline}"></span><div class="bar"><span style="width:${pct}%;background:${color}"></span></div></td>
+          </tr>`;
+        })
+        .join('')}</tbody></table></div>`
+    : `<p class="muted">None. Every critical result has been acknowledged.</p>`;
+
+  document.getElementById('done').innerHTML = done.length
+    ? `<div class="table-wrap"><table><thead><tr><th>Patient</th><th>Result</th><th>Acknowledged by</th><th>Time to ack</th><th>Read-back</th><th>Status</th></tr></thead><tbody>${done
+        .map(
+          (r) => `<tr>
+            <td>${esc(r.coverage.patient.name)}</td>
+            <td>${esc(r.test)} ${esc(r.value)}</td>
+            <td>${esc(name(state, r.ack.by))} at ${hhmm(r.ack.at)}</td>
+            <td class="timer ${r.ack.minutesToAck <= 30 ? 't-ok' : 't-crit'}">${mmss(r.ack.minutesToAck)}</td>
+            <td>${r.ack.matches ? 'Matches' : '<span class="t-crit">Mismatch</span>'}</td>
+            <td><span class="chip ${r.status}">${r.status === 'closed' ? 'Closed' : 'Read-back pending'}</span></td>
+          </tr>`
+        )
+        .join('')}</tbody></table></div>`
+    : `<p class="muted">None yet.</p>`;
+}
+
+    },
+  },
+};
+
+// Each view is mounted into #app; links to *.html switch views instead of loading pages.
+function mount(name) {
+  if (!VIEWS[name]) name = 'home';
+  window.CC_RESET_SUBSCRIBERS();
+  document.getElementById('app').innerHTML = VIEWS[name].html;
+  VIEWS[name].run();
+  window.scrollTo(0, 0);
+  try {
+    history.replaceState(null, '', '#' + name);
+  } catch {
+    // Some embedded frames refuse history changes; navigation still works.
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const m = a.getAttribute('href').match(/^\/?(?:(\w+)\.html)?(?:\?.*)?$/);
+  if (!m) return;
+  e.preventDefault();
+  mount(!m[1] || m[1] === 'index' ? 'home' : m[1]);
+});
+window.addEventListener('hashchange', () => mount(location.hash.slice(1)));
+mount(location.hash.slice(1));</script>
+</body>
+</html>

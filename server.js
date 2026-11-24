@@ -6,6 +6,7 @@ const path = require('path');
 const seed = require('./data/seed.json');
 const { createClock } = require('./src/time');
 const { createStore, HttpError } = require('./src/store');
+const { createApi } = require('./src/api');
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -13,6 +14,7 @@ const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript
 
 const clock = createClock(seed.demoStart);
 const store = createStore(seed, clock);
+const post = createApi(store, clock);
 const sseClients = new Set();
 
 function broadcast() {
@@ -42,27 +44,6 @@ function readBody(req) {
   });
 }
 
-// POST routes: [pattern, handler(params, body)]
-const routes = [
-  [/^\/api\/results$/, (_, b) => store.postResult(b.scenario)],
-  [/^\/api\/results\/(\w+)\/notify$/, ([id], b) => store.notify(id, b)],
-  [/^\/api\/results\/(\w+)\/close$/, ([id]) => store.close(id)],
-  [/^\/api\/notifications\/(\w+)\/ack$/, ([id], b) => store.acknowledge(id, b)],
-  [/^\/api\/notifications\/(\w+)\/wrong-person$/, ([id], b) => store.wrongPerson(id, b)],
-  [/^\/api\/clock\/advance$/, (_, b) => {
-    const minutes = Number(b.minutes);
-    if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 120) throw new HttpError(400, 'minutes must be 1–120');
-    clock.advance(minutes);
-    store.tick();
-    return { ok: true };
-  }],
-  [/^\/api\/reset$/, () => {
-    clock.reset();
-    store.reset();
-    return { ok: true };
-  }],
-];
-
 function serveStatic(req, res) {
   let urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   if (urlPath === '/') urlPath = '/index.html';
@@ -90,15 +71,9 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (req.method === 'POST') {
-      for (const [pattern, handler] of routes) {
-        const m = pathname.match(pattern);
-        if (!m) continue;
-        const result = handler(m.slice(1), await readBody(req));
-        store.tick();
-        broadcast();
-        return sendJson(res, 200, result);
-      }
-      return sendJson(res, 404, { error: 'Not found' });
+      const result = post(pathname, await readBody(req));
+      broadcast();
+      return sendJson(res, 200, result);
     }
     if (req.method === 'GET') return serveStatic(req, res);
     sendJson(res, 405, { error: 'Method not allowed' });

@@ -27,16 +27,29 @@ const CC = (() => {
     setTimeout(() => el.remove(), 3500);
   }
 
+  // How the views talk to the demo backend. The standalone build sets window.CC_TRANSPORT
+  // to run the same backend code inside the page instead of over HTTP.
+  const transport = window.CC_TRANSPORT || {
+    async post(path, body) {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+      });
+      return { ok: res.ok, data: await res.json().catch(() => ({})), statusText: res.statusText };
+    },
+    subscribe(onState) {
+      const es = new EventSource('/api/events');
+      es.onmessage = (e) => onState(JSON.parse(e.data));
+      return () => es.close();
+    },
+  };
+
   async function api(path, body) {
-    const res = await fetch(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body || {}),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      toast(data.error || res.statusText, 'error');
-      throw new Error(data.error || res.statusText);
+    const { ok, data, statusText } = await transport.post(path, body);
+    if (!ok) {
+      toast(data.error || statusText, 'error');
+      throw new Error(data.error || statusText);
     }
     return data;
   }
@@ -66,8 +79,7 @@ const CC = (() => {
       if (clock) clock.textContent = hhmm(state.now);
     }
 
-    const es = new EventSource('/api/events');
-    es.onmessage = (e) => update(JSON.parse(e.data));
+    transport.subscribe((state) => update(state));
     return { rerender: () => lastState && update(lastState, true), state: () => lastState };
   }
 

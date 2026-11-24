@@ -28,7 +28,7 @@ function render(state) {
     .join('');
 
   document.getElementById('open').innerHTML = open.length
-    ? `<table><thead><tr><th>Patient</th><th>Result</th><th>Covering now</th><th>Contacted</th><th>Stage</th><th>Time left</th></tr></thead><tbody>${open
+    ? `<div class="table-wrap"><table><thead><tr><th>Patient</th><th>Result</th><th>Covering now</th><th>Contacted</th><th>Stage</th><th>Time left</th></tr></thead><tbody>${open
         .map((r) => {
           const left = (Date.parse(r.deadline) - now) / 60000;
           const pct = Math.max(0, Math.min(100, (left / state.policyMinutes) * 100));
@@ -42,11 +42,11 @@ function render(state) {
             <td><span class="timer" data-deadline="${r.deadline}"></span><div class="bar"><span style="width:${pct}%;background:${color}"></span></div></td>
           </tr>`;
         })
-        .join('')}</tbody></table>`
+        .join('')}</tbody></table></div>`
     : `<p class="muted">None. Every critical result has been acknowledged.</p>`;
 
   document.getElementById('done').innerHTML = done.length
-    ? `<table><thead><tr><th>Patient</th><th>Result</th><th>Acknowledged by</th><th>Time to ack</th><th>Read-back</th><th>Status</th></tr></thead><tbody>${done
+    ? `<div class="table-wrap"><table><thead><tr><th>Patient</th><th>Result</th><th>Acknowledged by</th><th>Time to ack</th><th>Read-back</th><th>Status</th></tr></thead><tbody>${done
         .map(
           (r) => `<tr>
             <td>${esc(r.coverage.patient.name)}</td>
@@ -57,6 +57,6 @@ function render(state) {
             <td><span class="chip ${r.status}">${r.status === 'closed' ? 'Closed' : 'Read-back pending'}</span></td>
           </tr>`
         )
-        .join('')}</tbody></table>`
+        .join('')}</tbody></table></div>`
     : `<p class="muted">None yet.</p>`;
 }

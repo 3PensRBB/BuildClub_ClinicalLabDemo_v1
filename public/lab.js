@@ -163,7 +163,7 @@ function renderDetail(state, r) {
       <div class="side-stack">${orderingCard}</div>
     </div>
     <div class="coverage" style="grid-template-columns:1fr 1fr">${otherCard('backup')}${otherCard('chargeNurse')}</div>
-    <h3>Notifications</h3>${notifRows}
+    <h3>Notifications</h3><div class="table-wrap">${notifRows}</div>
     <h3>Closed loop</h3>${loop}
     <h3>Audit timeline</h3>
     <ul class="timeline">${r.events.map((e) => `<li class="${e.type}"><span class="t">${hhmm(e.at)}</span><span>${esc(e.text)}</span></li>`).join('')}</ul>`;
@@ -179,9 +179,7 @@ document.getElementById('detail').addEventListener('click', async (e) => {
     await api(`/api/results/${selectedId}/notify`, { target: b.dataset.call, channel: 'call' });
     toast('Call placed and logged');
   } else if (b.dataset.wrong) {
-    const reason = prompt('Why is this the wrong person?', 'Not covering this patient');
-    if (reason === null) return;
-    await api(`/api/notifications/${b.dataset.wrong}/wrong-person`, { reason });
+    await api(`/api/notifications/${b.dataset.wrong}/wrong-person`, { reason: 'Lab: not covering this patient' });
     toast('Re-routed to the next contact');
   } else if (b.dataset.close) {
     await api(`/api/results/${b.dataset.close}/close`);
